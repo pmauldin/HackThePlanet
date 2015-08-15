@@ -1,5 +1,6 @@
 import bpy
 import sensel
+import tools
 
 class ModalTimerOperator(bpy.types.Operator):
 	"""Operator which runs its self from a timer"""
@@ -7,11 +8,6 @@ class ModalTimerOperator(bpy.types.Operator):
 	bl_label = "Modal Timer Operator"
 
 	_timer = None
-
-	width = 230
-	height = 120
-
-	sensitivity = 80000
 
 	sensel_device = sensel.SenselDevice()
 	sensel_device.openConnection()
@@ -27,26 +23,7 @@ class ModalTimerOperator(bpy.types.Operator):
 
 		if event.type == 'TIMER':
 			contacts = self.sensel_device.readContacts()
-
-			for contact in contacts:
-				if contact.x_pos_mm <= self.width/2:
-					if contact.y_pos_mm <= self.height/2:
-						print("Decreasing x")
-						# if contact.total_force > 2000:
-						bpy.context.selected_objects[0].location.x -= contact.total_force/self.sensitivity
-					else:
-						print ("Increasing X")
-						# if contact.total_force > 2000:
-						bpy.context.selected_objects[0].location.x += contact.total_force/self.sensitivity
-				else:
-					if contact.y_pos_mm <= self.height/2:
-						print ("Increasing Z")
-						# if contact.total_force > 2000:
-						bpy.context.selected_objects[0].location.z += contact.total_force/self.sensitivity
-					else:
-						print ("Decreasing z")
-						# if contact.total_force > 2000:
-						bpy.context.selected_objects[0].location.z -= contact.total_force/self.sensitivity
+			tools.process_input(contacts)
 
 		return {'PASS_THROUGH'}
 
