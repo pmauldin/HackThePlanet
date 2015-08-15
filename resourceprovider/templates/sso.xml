@@ -1,0 +1,4 @@
+<SsoToken xmlns="http://schemas.microsoft.com/windowsazure">
+    <TimeStamp>{{ timestamp }}</TimeStamp>
+    <Token>{{ token }}</Token>
+</SsoToken>

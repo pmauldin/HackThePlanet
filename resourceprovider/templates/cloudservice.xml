@@ -1,0 +1,28 @@
+<CloudService xmlns="http://schemas.microsoft.com/windowsazure">
+    <GeoRegion>{{ georegion }}</GeoRegion>
+    <Resources>
+        {%- for resource in resources %}
+        <Resource>
+            <ETag>{{ resource.etag }}</ETag>
+            <Name>{{ resource.name }}</Name>
+            <OperationStatus>
+                <Result>{{ resource.result }}</Result>
+            </OperationStatus>
+            <Plan>{{ resource.plan }}</Plan>
+            <State>{{ resource.state }}</State>
+            <SubState>{{ resource.substate }}</SubState>
+            <Type>{{ resource.type }}</Type>
+            <UsageMeters>
+                {%- for usagemeter in resource.usagemeters %}
+                <UsageMeter>
+                    <Name>{{ usagemeter.name }}</Name>
+                    <Included>{{ usagemeter.included }}</Included>
+                    <Used>{{ usagemeter.used }}</Used>
+                    <Unit>{{ usagemeter.unit }}</Unit>
+                </UsageMeter>
+                {%- endfor %} 
+            </UsageMeters>
+        </Resource>
+        {%- endfor %}
+    </Resources>
+</CloudService>

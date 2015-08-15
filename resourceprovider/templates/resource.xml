@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Resource xmlns="http://schemas.microsoft.com/windowsazure">
+    <CloudServiceSettings>  
+            <GeoRegion>{{ georegion }}</GeoRegion>
+    </CloudServiceSettings> 
+    <ETag>{{ etag }}</ETag>
+    <Name>{{ name }}</Name>
+    <OperationStatus>
+        {%- if ok %}
+        <Result>Succeeded</Result>
+        {%- else %}
+        <Result>
+            <Result>Failed</Result>
+            <Error>
+                <HttpCode>{{ status }}</HttpCode>
+                <Message>{{ reason }}</Message>
+            </Error>
+        </Result>
+        {%- endif %}
+    </OperationStatus>
+    {%- if outputitems %}
+    <OutputItems>
+        {%- for key, value in outputitems.iteritems() %}
+        <OutputItem>
+            <Key>{{ key }}</Key>
+            <Value>{{ value }}</Value>
+        </OutputItem>
+        {%- endfor %}
+    </OutputItems>
+    {%- endif %}
+    <Plan>{{ plan }}</Plan>
+    <State>{{ state }}</State>
+    {%- if substate %}
+    <SubState>{{ substate }}</SubState>
+    {%- endif %}
+    {%- if usagemeters %}
+    <UsageMeters>
+        {%- for usagemeter in usagemeters %}
+        <UsageMeter>
+            <Name>{{ usagemeter.name }}</Name>
+            <Included>{{ usagemeter.included }}</Included>
+            <Used>{{ usagemeter.used }}</Used>
+            <Unit>{{ usagemeter.unit }}</Unit>
+        </UsageMeter>
+        {%- endfor %}
+    </UsageMeters>
+    {%- endif %}
+</Resource>
