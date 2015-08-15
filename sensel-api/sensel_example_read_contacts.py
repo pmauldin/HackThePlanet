@@ -13,14 +13,14 @@ from __future__ import print_function
 from keyboard_reader import *
 import sensel
 
-exit_requested = False;
+exit_requested = False
 
 def keypress_handler(ch):
     global exit_requested
 
     if ch == 0x51 or ch == 0x71: #'Q' or 'q'
-        print("Exiting Example...", end="\r\n");
-        exit_requested = True;
+        print("Exiting Example...", end="\r\n")
+        exit_requested = True
 
 
 def openSensorReadContacts():
@@ -50,15 +50,15 @@ def openSensorReadContacts():
         for c in contacts:
             event = ""
             if c.type == sensel.SENSEL_EVENT_CONTACT_INVALID:
-                event = "invalid"; 
+                event = "invalid"
             elif c.type == sensel.SENSEL_EVENT_CONTACT_START:
                 event = "start"
             elif c.type == sensel.SENSEL_EVENT_CONTACT_MOVE:
-                event = "move";
+                event = "move"
             elif c.type == sensel.SENSEL_EVENT_CONTACT_END:
-                event = "end";
+                event = "end"
             else:
-                event = "error";
+                event = "error"
     
             print("Contact ID %d, event=%s, mm coord: (%f, %f), force=%d" % 
                   (c.id, event, c.x_pos_mm, c.y_pos_mm, c.total_force), end="\r\n")
