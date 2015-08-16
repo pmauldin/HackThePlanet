@@ -4,7 +4,7 @@ import bpy
 # surface width = 230mm
 # tool space width = 64
 import math
-
+# TOOL_LIST[2][x]
 TOOL_LIST = [
 		['VIEW_MOVE', 'VIEW_PAN', 'VIEW_ROTATE', 'VIEW_CURSOR'],
 		['OBJECT_INDENT', 'OBJECT_ROTATED', 'OBJECT_MOVE', 'SENSITIVITY', 'RESET']
@@ -15,8 +15,10 @@ HEIGHT = 120
 
 TOOL_THRESHOLD = 65
 
-BUTTON_WIDTH = TOOL_THRESHOLD / 2
-BUTTON_HEIGHT = HEIGHT / len(TOOL_LIST[1])
+BUTTON_WIDTH = TOOL_THRESHOLD / len(TOOL_LIST)
+BUTTON_HEIGHTS = []
+for column in TOOL_LIST:
+	BUTTON_HEIGHTS.append(HEIGHT / len(column))
 
 
 sensitivity = 100
@@ -53,7 +55,7 @@ def process_inputs(contacts):
 
 def select_tool(contact):
 	x = math.floor(contact.x_pos_mm / BUTTON_WIDTH)
-	y = math.floor(contact.y_pos_mm / BUTTON_HEIGHT)
+	y = math.floor(contact.y_pos_mm / BUTTON_HEIGHTS[x])
 	print (str(x) + "   " + str(y))
 	return TOOL_LIST[x][y]
 
