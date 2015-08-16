@@ -29,7 +29,7 @@ def process_inputs(contacts):
 	global prev_coords
 
 	if not contacts:
-		prev_coords = [0, 0]
+		prev_coords = [0.0, 0.0]
 		return
 
 	for contact in contacts:
@@ -43,16 +43,18 @@ def process_inputs(contacts):
 			break
 		else:
 			if selected_tool is 'OBJECT_MOVE':
-				print ("Prev coords: [%d, %d]  -  Current coords [%d, %d]" % (prev_coords[0], prev_coords[1], contact.x_pos_mm, contact.y_pos_mm))
-				if prev_coords is [0.0, 0.0]:
+				# print ("Prev coords: [%d, %d]  -  Current coords [%d, %d]" % (prev_coords[0], prev_coords[1], contact.x_pos_mm, contact.y_pos_mm))
+				if prev_coords[0] is 0.0:
 					prev_coords = [contact.x_pos_mm, contact.y_pos_mm]
 				else:
+					object_move(contacts)
 					prev_coords = [contact.x_pos_mm, contact.y_pos_mm]
-					object_move(contact)
+					return
 
 def select_tool(contact):
 	x = math.floor(contact.x_pos_mm / BUTTON_WIDTH)
 	y = math.floor(contact.y_pos_mm / BUTTON_HEIGHT)
+	print (str(x) + "   " + str(y))
 	return TOOL_LIST[x][y]
 
 def reset():
@@ -62,8 +64,8 @@ def reset():
 
 def object_move(contact):
 	global prev_coords
-	delta_x = contact.x_pos_mm - prev_coords[0]
-	delta_y = contact.y_pos_mm - prev_coords[1]
+	delta_x = (contact.x_pos_mm - prev_coords[0]) / sensitivity
+	delta_y = (contact.y_pos_mm - prev_coords[1]) / sensitivity
 	for blender_object in bpy.context.selected_objects:
 		blender_object.location = (blender_object.location.x + delta_y,
 		                           blender_object.location.y + delta_x,
