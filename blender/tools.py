@@ -10,7 +10,7 @@ SENSEL_DEVICE = None
 
 TOOL_LIST = [
 		[('VIEW_PAN', 0), ('VIEW_ROTATE', 1), ('VIEW_CURSOR', 2)],
-		[('OBJECT_MOVE', 3), ('OBJECT_ROTATE', 4), ('OBJECT_INDENT', 5)],
+		[('OBJECT_MOVE', 3), ('OBJECT_ROTATE', 4), ('TOGGLE_MODE', 5)],
 		[('RESET', 13), ('UNDO', 14), ('REDO', 15)]
 ]
 
@@ -38,6 +38,7 @@ selected_tool = "VIEW_PAN"
 led_index = 0
 
 prev_coords = [0.0, 0.0]
+edit = False
 
 mouse = PyMouse()
 
@@ -58,10 +59,12 @@ def process_inputs(contacts):
 		elif tool == 'UNDO' or tool == 'REDO':
 			if prev_coords == [0.0, 0.0]:
 				history(tool)
+		elif tool == 'TOGGLE_MODE':
+			if prev_coords == [0.0, 0.0]:
+				toggle_mode()
 		elif selected_tool != tool:
 			selected_tool = tool
 			updateLED()
-			print("Selecting %s at %s, %s" % (selected_tool, contacts[0].x_pos_mm, contacts[0].y_pos_mm))
 		prev_coords = [contacts[0].x_pos_mm, contacts[0].y_pos_mm]
 		return
 	else:
@@ -81,8 +84,6 @@ def process_inputs(contacts):
 						view_rotate(contact, len(contacts))
 					elif selected_tool == 'VIEW_CURSOR':
 						view_cursor(contact, len(contacts))
-					elif selected_tool == 'SCULPT_TOGGLE':
-						sculpt_toggle()
 					prev_coords = [contact.x_pos_mm, contact.y_pos_mm]
 					return
 
@@ -104,7 +105,6 @@ def updateLED():
 	SENSEL_DEVICE.setLEDBrightness(LED_LIST)
 
 def flashLED(tool):
-	print(tool)
 	flash_index = -1
 	if tool == 'RESET':
 		flash_index = 13
@@ -139,8 +139,6 @@ def history(tool_name):
 		bpy.ops.ed.redo()
 		flashLED(tool_name)
 
-
-
 def object_move(contact, numContacts):
 	delta_x, delta_y = calc_delta(contact, numContacts)
 	delta_z = calc_force(contact, numContacts)
@@ -152,6 +150,14 @@ def object_rotate(contact, numContacts):
 	bpy.ops.transform.rotate(value=delta_x, axis=(0,0,1))
 	view = get_view()
 	view_zoom(view, contact, numContacts)
+
+def toggle_mode():
+	global edit
+	edit = not edit
+	if edit:
+		bpy.ops.object.mode_set(mode='EDIT')
+	else:
+		bpy.ops.object.mode_set(mode='OBJECT')
 
 def view_rotate(contact, numContacts):
 	view = get_view()
@@ -184,9 +190,6 @@ def view_cursor(contact, numContacts):
 			mouse.click(mouse_x, mouse_y, 1)
 		else:
 			mouse.click(mouse_x, mouse_y, 2)
-
-def sculpt_toggle():
-	bpy.ops.object.mode_set(MODE='EDIT')
 
 def calc_delta(contact, numContacts, s=sensitivity, base_sensitivity=35.0, min_sensitivity=20.0):
 	tmp_sensitivity = s - ((numContacts - 1) * base_sensitivity)
