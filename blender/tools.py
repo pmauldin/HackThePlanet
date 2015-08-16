@@ -20,15 +20,22 @@ BUTTON_HEIGHT = HEIGHT / len(TOOL_LIST[0])
 
 
 sensitivity = 80000
-selected_tool = "VIEW_CURSOR"
+selected_tool = "OBJECT_MOVE"
+
+prev_coords = [0.0, 0.0]
 
 def process_inputs(contacts):
 	global selected_tool
+	global prev_coords
+
+	if not contacts:
+		prev_coords = [0, 0]
+		return
 
 	for contact in contacts:
 		if contact.x_pos_mm < TOOL_THRESHOLD:
 			selected_tool = select_tool(contact)
-			tool = select_tool(contact.x_pos_mm, contact.y_pos_mm)
+			tool = select_tool(contact)
 			if tool is 'RESET':
 				reset()
 			else:
@@ -36,7 +43,9 @@ def process_inputs(contacts):
 			print("Selecting %s at %s, %s" % (selected_tool, contact.x_pos_mm, contact.y_pos_mm))
 			break
 		else:
-			print("dX speed: %f\ndY speed: %f", contact.dx, contact.dy)
+			if selected_tool is 'OBJECT_MOVE':
+				print ("Prev coords: [%d, %d]  -  Current coords [%d, %d]" % (prev_coords[0], prev_coords[1], contact.x_pos_mm, contact.y_pos_mm))
+				prev_coords = [contact.x_pos_mm, contact.y_pos_mm]
 
 
 def select_tool(contact):
