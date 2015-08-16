@@ -8,7 +8,7 @@ TOOL_LIST = [
 		[('OBJECT_INDENT', 4), ('OBJECT_ROTATED', 5), ('OBJECT_MOVE', 6), ('SENSITIVITY', 7), ('RESET', 8)]
 ]
 
-NUM_BUTTONS = 8
+NUM_BUTTONS = 9
 LED_BRIGHTNESS = 150
 LED_LIST = []
 for i in range(NUM_BUTTONS):
@@ -43,6 +43,7 @@ def process_inputs(contacts):
 		tool,led_index = select_tool(contacts[0])
 		if tool == 'RESET':
 			reset()
+			prev_coords = [contacts[0].x_pos_mm, contacts[0].y_pos_mm]
 		else:
 			selected_tool = tool
 			updateLED()
@@ -83,8 +84,10 @@ def resetAlertLED():
 	SENSEL_DEVICE.setLEDBrightness(LED_LIST)
 	LED_LIST[8] = 0
 	SENSEL_DEVICE.setLEDBrightness(LED_LIST)
+
 def reset():
-	resetAlertLED()
+	if prev_coords == [0.0, 0.0]:
+		resetAlertLED()
 	for blender_object in bpy.context.selected_objects:
 		blender_object.rotation_euler = (0, 0, 0)
 		blender_object.location = (0, 0, 0)
