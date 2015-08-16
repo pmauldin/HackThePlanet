@@ -31,6 +31,7 @@ class SenselOperator(bpy.types.Operator):
 		wm = context.window_manager
 		self._timer = wm.event_timer_add(0.001, context.window)
 		wm.modal_handler_add(self)
+		tools.set_device(self.sensel_device)
 		return {'RUNNING_MODAL'}
 
 	def cancel(self, context):
