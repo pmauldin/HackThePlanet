@@ -7,7 +7,7 @@ import math
 
 TOOL_LIST = [
 		['VIEW_MOVE', 'VIEW_PAN', 'VIEW_ROTATE', 'VIEW_CURSOR'],
-		['OBJECT_INDENT', 'OBJECT_ROTATED', 'SENSITIVITY', 'RESET']
+		['OBJECT_INDENT', 'OBJECT_ROTATED', 'OBJECT_MOVE', 'SENSITIVITY', 'RESET']
 ]
 
 WIDTH = 230
@@ -36,7 +36,7 @@ def process_inputs(contacts):
 			print("Selecting %s at %s, %s" % (selected_tool, contact.x_pos_mm, contact.y_pos_mm))
 			break
 		else:
-			print("Touching myself")
+			print("dX speed: %f\ndY speed: %f", contact.dx, contact.dy)
 
 
 def select_tool(contact):
