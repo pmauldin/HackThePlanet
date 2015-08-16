@@ -1,6 +1,10 @@
 import bpy
 import math
+import sys
 from mathutils import Euler
+
+sys.path.append("/home/peter/Hackathons/venv/lib/python3.4/site-packages/")
+from pymouse import PyMouse
 
 SENSEL_DEVICE = None
 
@@ -34,6 +38,8 @@ selected_tool = "VIEW_PAN"
 led_index = 0
 
 prev_coords = [0.0, 0.0]
+
+mouse = PyMouse()
 
 def process_inputs(contacts):
 	global selected_tool
@@ -171,31 +177,55 @@ def view_zoom(view, contact, numContacts):
 	view.spaces[0].region_3d.view_distance += delta_z
 
 def view_cursor(contact, numContacts):
-	delta_x, delta_y = calc_delta(contact, numContacts)
-	delta_z = calc_force(contact, numContacts)
-	bpy.context.scene.cursor_location = (bpy.context.scene.cursor_location.x + delta_z,
-										 bpy.context.scene.cursor_location.y + delta_x,
-										 bpy.context.scene.cursor_location.z - delta_y)
+	TOUCH_WIDTH = WIDTH - TOOL_THRESHOLD
+
+	w, h = mouse.screen_size()
+
+	area = bpy.context.screen.areas[2]
+
+	width_percent = (contact.x_pos_mm - TOOL_THRESHOLD) / TOUCH_WIDTH
+	height_percent = contact.y_pos_mm / HEIGHT
+
+	viewport_x = bpy.context.window.x + area.x
+	viewport_y = h - (area.height + area.y)
+
+	input_x = width_percent * area.width
+	input_y = height_percent * area.height
+
+	mouse.click(int(viewport_x + input_x), int(viewport_y + input_y), 1)
+
+
+	delta_z = calc_force(contact, numContacts, 4500)
+
+	if delta_z != 0:
+		xx, yy = mouse.position()
+		mouse.click(xx, yy, 2)
 
 def sculpt_toggle():
 	bpy.ops.object.mode_set(MODE='EDIT')
 	bpy.context.selected_objects[0].bend()
 
-def calc_delta(contact, numContacts):
-	tmp_sensitivity = sensitivity - ((numContacts - 1) * 35)
-	if tmp_sensitivity < 20:
-		tmp_sensitivity = 20
+def calc_delta(contact, numContacts, base_sensitivity=35, min_sensitivity=20):
+	tmp_sensitivity = sensitivity - ((numContacts - 1) * base_sensitivity)
+	if tmp_sensitivity < min_sensitivity:
+		tmp_sensitivity = min_sensitivity
 	delta_x = (contact.x_pos_mm - prev_coords[0]) / tmp_sensitivity
 	delta_y = (contact.y_pos_mm - prev_coords[1]) / tmp_sensitivity
 	return delta_x, delta_y
 
-def calc_force(contact, numContacts):
+def calc_force(contact, numContacts, threshold=FORCE_THRESHOLD):
 	direction = -1
 	if numContacts > 1:
 		direction = 1
 
 	force = 0
-	if contact.total_force > FORCE_THRESHOLD:
+	if contact.total_force > threshold:
 		force = contact.total_force / FORCE_SENSITIVITY * direction
 
 	return force
+
+# def click():
+# 	mouse_pos = mouse.position()
+# 	mouse.click()
+#
+# 	mouse.move(mouse_pos.x, mouse_pos.yr)
