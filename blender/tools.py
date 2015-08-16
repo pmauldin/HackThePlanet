@@ -1,16 +1,20 @@
 import bpy
 import math
 import sys
+import paramiko
 from mathutils import Euler
 
-sys.path.append("/home/peter/Hackathons/venv/lib/python3.4/site-packages/")
+# sys.path.append("/home/peter/Hackathons/venv/lib/python3.4/site-packages/")
+sys.path.append("/home/lakitu/bin/blender-2.75a-linux-glibc211-x86_64/2.7.5/python/lib/python3.4/site-packages/")
+sys.path.append("/home/lakitu/.local/lib/python2.7/site-packages/")
+# sys.path.append("/home/bin/blender-2.75a-linux-glibc211-x86_64/2.7.5/python/lib/python3.4/site-packages/")
 from pymouse import PyMouse
 
 SENSEL_DEVICE = None
 
 TOOL_LIST = [
 		[('VIEW_PAN', 0), ('VIEW_ROTATE', 1), ('VIEW_CURSOR', 2)],
-		[('OBJECT_INDENT', 3), ('OBJECT_ROTATE', 4), ('OBJECT_MOVE', 5), ('SCULPT_TOGGLE', 6)],
+		[('OBJECT_INDENT', 3), ('OBJECT_ROTATE', 4), ('OBJECT_MOVE', 5)],
 		[('RESET', 10), ('UNDO', 13), ('REDO', 14)]
 ]
 
@@ -145,16 +149,15 @@ def history(tool_name):
 def object_move(contact, numContacts):
 	delta_x, delta_y = calc_delta(contact, numContacts)
 	delta_z = calc_force(contact, numContacts)
-
-	for blender_object in bpy.context.selected_objects:
-		blender_object.location = (blender_object.location.x + delta_y,
-		                           blender_object.location.y + delta_x,
-		                           blender_object.location.z + delta_z)
+	bpy.ops.transform.translate(value=(delta_y, delta_x, delta_z))
 
 def object_rotate(contact, numContacts):
 	delta_x, delta_y = calc_delta(contact, numContacts)
-	for blender_object in bpy.context.selected_objects:
-		blender_object.trackball = (delta_y, delta_x)
+	bpy.ops.transform.rotate(value=delta_y, axis=(1,1,0))
+	bpy.ops.transform.rotate(value=delta_x, axis=(0,0,1))
+	for view in bpy.context.screen.areas:
+		if view.type == 'VIEW_3D':
+			view_zoom(view, contact, numContacts)
 
 def view_rotate(contact, numContacts):
 	for view in bpy.context.screen.areas:
@@ -203,7 +206,6 @@ def view_cursor(contact, numContacts):
 
 def sculpt_toggle():
 	bpy.ops.object.mode_set(MODE='EDIT')
-	bpy.context.selected_objects[0].bend()
 
 def calc_delta(contact, numContacts, base_sensitivity=35, min_sensitivity=20):
 	tmp_sensitivity = sensitivity - ((numContacts - 1) * base_sensitivity)
@@ -224,8 +226,8 @@ def calc_force(contact, numContacts, threshold=FORCE_THRESHOLD):
 
 	return force
 
-# def click():
-# 	mouse_pos = mouse.position()
-# 	mouse.click()
-#
-# 	mouse.move(mouse_pos.x, mouse_pos.yr)
+def click():
+	mouse_pos = mouse.position()
+	mouse.click()
+
+	mouse.move(mouse_pos.x, mouse_pos.yr)
