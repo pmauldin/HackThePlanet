@@ -5,7 +5,7 @@ from mathutils import Euler
 SENSEL_DEVICE = None
 
 TOOL_LIST = [
-		[('VIEW_MOVE', 0), ('VIEW_ROTATE', 1), ('VIEW_CURSOR', 2)],
+		[('VIEW_PAN', 0), ('VIEW_ROTATE', 1), ('VIEW_CURSOR', 2)],
 		[('OBJECT_INDENT', 3), ('OBJECT_ROTATED', 4), ('OBJECT_MOVE', 5), ('SENSITIVITY', 6)],
 		[('RESET', 10), ('UNDO', 13), ('REDO', 14)]
 ]
@@ -27,6 +27,7 @@ BUTTON_HEIGHTS = []
 for column in TOOL_LIST:
 	BUTTON_HEIGHTS.append(HEIGHT / len(column))
 
+# prime doe
 sensitivity = 101
 selected_tool = "VIEW_ROTATE"
 led_index = 2
@@ -67,8 +68,8 @@ def process_inputs(contacts):
 						view_rotate(contact, len(contacts))
 					elif selected_tool == 'VIEW_PAN':
 						view_pan(contact, len(contacts))
-					elif selected_tool == 'OBJECT_INDENT':
-						object_indent(contact, len(contacts))
+					# elif selected_tool == 'OBJECT_INDENT':
+					# 	object_indent(contact, len(contacts))
 					prev_coords = [contact.x_pos_mm, contact.y_pos_mm]
 					return
 
@@ -144,12 +145,6 @@ def object_move(contact, numContacts):
 		                           blender_object.location.y + delta_x,
 		                           blender_object.location.z)
 
-
-def object_indent(contact, numContacts):
-	bpy.ops.object.editmode_toggle()
-	bpy.ops.mesh.subdivide(smoothness=0)
-	object_move(contact, numContacts)
-	bpy.ops.object.editmode_toggle()
 
 def view_rotate(contact, numContacts):
 	for view in bpy.context.screen.areas:
