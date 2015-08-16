@@ -16,20 +16,19 @@ HEIGHT = 120
 TOOL_THRESHOLD = 65
 
 sensitivity = 80000
-selected_tool = "PAN"
+selected_tool = "VIEW_CURSOR"
 
-def process_inputs(contacts, selected_tool):
+def process_inputs(contacts):
+	global selected_tool
 
 	for contact in contacts:
 		if contact.x_pos_mm < TOOL_THRESHOLD:
-			select_tool(contact)
+			selected_tool = select_tool(contact)
+			print("Selecting %s at %s, %s" % (selected_tool, contact.x_pos_mm, contact.y_pos_mm))
 			break
 		else:
 			print("Touching myself")
 
 
 def select_tool(contact):
-	x_coord = contact.x_pos_mm
-	y_coord = contact.y_pos_mm
-	print("Selecting tool at %s, %s" % (x_coord, y_coord))
-	return TOOL_LIST[x_coord / BUTTON_WIDTH][y_coord / BUTTON_HEIGHT]
+	return TOOL_LIST[contact.x_pos_mm / BUTTON_WIDTH][contact.y_pos_mm / BUTTON_HEIGHT]

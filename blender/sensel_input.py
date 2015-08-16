@@ -2,10 +2,10 @@ import bpy
 import sensel
 import tools
 
-class ModalTimerOperator(bpy.types.Operator):
+class SenselOperator(bpy.types.Operator):
 	"""Operator which runs its self from a timer"""
-	bl_idname = "wm.modal_timer_operator"
-	bl_label = "Modal Timer Operator"
+	bl_idname = "wm.sensel_operator"
+	bl_label = "Sensel Operator"
 
 	_timer = None
 
@@ -23,7 +23,7 @@ class ModalTimerOperator(bpy.types.Operator):
 
 		if event.type == 'TIMER':
 			contacts = self.sensel_device.readContacts()
-			tools.process_input(contacts)
+			tools.process_inputs(contacts)
 
 		return {'PASS_THROUGH'}
 
@@ -42,15 +42,15 @@ class ModalTimerOperator(bpy.types.Operator):
 
 
 def register():
-	bpy.utils.register_class(ModalTimerOperator)
+	bpy.utils.register_class(SenselOperator)
 
 
 def unregister():
-	bpy.utils.unregister_class(ModalTimerOperator)
+	bpy.utils.unregister_class(SenselOperator)
 
 
 if __name__ == "__main__":
 	register()
 
 	# test call
-	bpy.ops.wm.modal_timer_operator()
+	bpy.ops.wm.sensel_operator()
