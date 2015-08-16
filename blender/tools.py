@@ -6,7 +6,7 @@ SENSEL_DEVICE = None
 
 TOOL_LIST = [
 		[('VIEW_PAN', 0), ('VIEW_ROTATE', 1), ('VIEW_CURSOR', 2)],
-		[('OBJECT_INDENT', 3), ('OBJECT_ROTATE', 4), ('OBJECT_MOVE', 5)],
+		[('OBJECT_INDENT', 3), ('OBJECT_ROTATE', 4), ('OBJECT_MOVE', 5), ('SCULPT_TOGGLE', 6)],
 		[('RESET', 10), ('UNDO', 13), ('REDO', 14)]
 ]
 
@@ -75,6 +75,8 @@ def process_inputs(contacts):
 						view_rotate(contact, len(contacts))
 					elif selected_tool == 'VIEW_CURSOR':
 						view_cursor(contact, len(contacts))
+					elif selected_tool == 'SCULPT_TOGGLE':
+						sculpt_toggle()
 					prev_coords = [contact.x_pos_mm, contact.y_pos_mm]
 					return
 
@@ -146,7 +148,7 @@ def object_move(contact, numContacts):
 def object_rotate(contact, numContacts):
 	delta_x, delta_y = calc_delta(contact, numContacts)
 	for blender_object in bpy.context.selected_objects:
-		blender_object.transform.rotation_euler = (delta_y, delta_x, 0)
+		blender_object.rotation_euler = (delta_y, delta_x, 0)
 
 def view_rotate(contact, numContacts):
 	for view in bpy.context.screen.areas:
@@ -174,6 +176,9 @@ def view_cursor(contact, numContacts):
 	bpy.context.scene.cursor_location = (bpy.context.scene.cursor_location.x + delta_z,
 										 bpy.context.scene.cursor_location.y + delta_x,
 										 bpy.context.scene.cursor_location.z - delta_y)
+
+def sculpt_toggle():
+	bpy.ops.sculpt.sculptmode_toggle()
 
 def calc_delta(contact, numContacts):
 	tmp_sensitivity = sensitivity - ((numContacts - 1) * 35)
