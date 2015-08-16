@@ -142,6 +142,13 @@ def object_move(contact, numContacts):
 		                           blender_object.location.y + delta_x,
 		                           blender_object.location.z)
 
+
+def object_indent(contact, numContacts):
+	bpy.ops.object.editmode_toggle()
+	bpy.ops.mesh.subdivide(smoothness=0)
+	object_move(contact, numContacts)
+	bpy.ops.object.editmode_toggle()
+
 def view_rotate(contact, numContacts):
 	for view in bpy.context.screen.areas:
 		if view.type == 'VIEW_3D':
