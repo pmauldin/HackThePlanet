@@ -6,9 +6,14 @@ import bpy
 import math
 # TOOL_LIST[2][x]
 TOOL_LIST = [
-		['VIEW_MOVE', 'VIEW_PAN', 'VIEW_ROTATE', 'VIEW_CURSOR'],
-		['OBJECT_INDENT', 'OBJECT_ROTATED', 'OBJECT_MOVE', 'SENSITIVITY', 'RESET']
+		[('VIEW_MOVE', 0), ('VIEW_PAN', 1), ('VIEW_ROTATE', 2), ('VIEW_CURSOR', 3)],
+		[('OBJECT_INDENT', 4), ('OBJECT_ROTATED', 5), ('OBJECT_MOVE', 6), ('SENSITIVITY', 7), ('RESET', 8)]
 ]
+
+NUM_BUTTONS = 8
+LED_LIST = []
+for i in range(NUM_BUTTONS):
+	LED_LIST.append(0)
 
 WIDTH = 230
 HEIGHT = 120
@@ -40,6 +45,7 @@ def process_inputs(contacts):
 			reset()
 		else:
 			selected_tool = tool
+			updateLED()
 		print("Selecting %s at %s, %s" % (selected_tool, contacts[0].x_pos_mm, contacts[0].y_pos_mm))
 	else:
 		for contact in contacts:
@@ -59,13 +65,18 @@ def select_tool(contact):
 	print (str(x) + "   " + str(y))
 	return TOOL_LIST[x][y]
 
+def updateLED():
+	global index
+	for i in range(NUM_BUTTONS):
+		LED_LIST[i] = 0
+	LED_LIST[index] = 255
+
 def reset():
 	for blender_object in bpy.context.selected_objects:
 		blender_object.rotation_euler = (0, 0, 0)
 		blender_object.location = (0, 0, 0)
 
 def object_move(contact, numContacts):
-	global prev_coords
 	tmp_sensitivity = sensitivity - ((numContacts - 1) * 35)
 	if tmp_sensitivity < 20:
 		tmp_sensitivity = 20
