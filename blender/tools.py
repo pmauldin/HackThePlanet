@@ -63,12 +63,12 @@ def process_inputs(contacts):
 				else:
 					if selected_tool == 'OBJECT_MOVE':
 						object_move(contact, len(contacts))
-					elif selected_tool == 'VIEW_ROTATE':
-						view_rotate(contact, len(contacts))
+					elif selected_tool == 'OBJECT_ROTATE':
+						object_rotate(contact, len(contacts))
 					elif selected_tool == 'VIEW_PAN':
 						view_pan(contact, len(contacts))
-					elif selected_tool == 'OBJECT_INDENT':
-						object_indent(contact, len(contacts))
+					elif selected_tool == 'VIEW_ROTATE':
+						view_rotate(contact, len(contacts))
 					prev_coords = [contact.x_pos_mm, contact.y_pos_mm]
 					return
 
@@ -144,12 +144,16 @@ def object_move(contact, numContacts):
 		                           blender_object.location.y + delta_x,
 		                           blender_object.location.z)
 
+def object_rotate(contact, numContacts):
+	tmp_sensitivity = sensitivity - ((numContacts - 1) * 35)
+	if tmp_sensitivity < 20:
+		tmp_sensitivity = 20
+	delta_x, delta_y = calc_delta(contact)
+	delta_x /= tmp_sensitivity
+	delta_y /= tmp_sensitivity
+	for blender_object in bpy.context.selected_objects:
+		blender_object.transform.rotation_euler = (delta_y, delta_x, 0)
 
-def object_indent(contact, numContacts):
-	bpy.ops.object.editmode_toggle()
-	bpy.ops.mesh.subdivide(smoothness=0)
-	object_move(contact, numContacts)
-	bpy.ops.object.editmode_toggle()
 
 def view_rotate(contact, numContacts):
 	for view in bpy.context.screen.areas:

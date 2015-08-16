@@ -1,3 +1,7 @@
+bl_info = {
+    "name": "Sensel Integration",
+    "category": "Object",
+}
 import bpy
 import sensel
 import tools
