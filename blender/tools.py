@@ -28,6 +28,11 @@ def process_inputs(contacts):
 	for contact in contacts:
 		if contact.x_pos_mm < TOOL_THRESHOLD:
 			selected_tool = select_tool(contact)
+			tool = select_tool(contact.x_pos_mm, contact.y_pos_mm)
+			if tool is 'RESET':
+				reset()
+			else:
+				selected_tool = tool
 			print("Selecting %s at %s, %s" % (selected_tool, contact.x_pos_mm, contact.y_pos_mm))
 			break
 		else:
@@ -38,3 +43,8 @@ def select_tool(contact):
 	x = math.floor(contact.x_pos_mm / BUTTON_WIDTH)
 	y = math.floor(contact.y_pos_mm / BUTTON_HEIGHT)
 	return TOOL_LIST[x][y]
+
+def reset():
+	for blender_object in bpy.context.selected_objects:
+		blender_object.rotation_euler = (0, 0, 0)
+		blender_object.location = (0, 0, 0)
