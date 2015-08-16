@@ -43,14 +43,15 @@ def process_inputs(contacts):
 
 	if contacts[0].x_pos_mm < TOOL_THRESHOLD:
 		tool,led_index = select_tool(contacts[0])
-		history(tool)
 		if tool == 'RESET':
 			reset()
 			prev_coords = [contacts[0].x_pos_mm, contacts[0].y_pos_mm]
-		else:
+		elif tool == 'UNDO' or tool == 'REDO':
+			history(tool)
+		elif selected_tool != tool:
 			selected_tool = tool
 			updateLED()
-		print("Selecting %s at %s, %s" % (selected_tool, contacts[0].x_pos_mm, contacts[0].y_pos_mm))
+			print("Selecting %s at %s, %s" % (selected_tool, contacts[0].x_pos_mm, contacts[0].y_pos_mm))
 	else:
 		for contact in contacts:
 			if contact.id is 0:
@@ -99,21 +100,34 @@ def flashLED(tool):
 		SENSEL_DEVICE.setLEDBrightness(LED_LIST)
 
 def reset():
+	print("Reset")
 	if prev_coords == [0.0, 0.0]:
+<<<<<<< HEAD
 		flashLED()
 	#TODO: for loop
 	bpy.context.screen.areas[2].spaces[0].region_3d.view_rotation = (0.8, 0.46, 0.2, 0.34)
 	bpy.context.screen.areas[2].spaces[0].region_3d.view_location = (0, 0, 0, 0)
 	bpy.context.screen.areas[2].spaces[0].region_3d.view_distance = 9
+=======
+		resetAlertLED()
+	for area in bpy.context.screen.areas:
+		if area.type == 'VIEW_3D':
+			area.spaces[0].region_3d.view_rotation = (0.8, 0.46, 0.2, 0.34)
+			area.spaces[0].region_3d.view_location = (0, 0, 0)
+			area.spaces[0].region_3d.view_distance = 9
+	
+>>>>>>> refs/remotes/origin/master
 	for blender_object in bpy.context.selected_objects:
 		blender_object.rotation_euler = (0, 0, 0)
 		blender_object.location = (0, 0, 0)
 
 def history(tool_name):
 	if tool_name == 'UNDO':
+		print("Undo")
 		bpy.ops.ed.undo()
 		flashLED(tool_name)
 	elif tool_name == 'REDO':
+		print("Redo")
 		bpy.ops.ed.redo()
 		flashLED(tool_name)
 
