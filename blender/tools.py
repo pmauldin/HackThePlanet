@@ -5,7 +5,7 @@ from mathutils import Euler
 SENSEL_DEVICE = None
 
 TOOL_LIST = [
-		[('VIEW_MOVE', 0), ('VIEW_ROTATE', 1), ('VIEW_CURSOR', 2)],
+		[('VIEW_PAN', 0), ('VIEW_ROTATE', 1), ('VIEW_CURSOR', 2)],
 		[('OBJECT_INDENT', 3), ('OBJECT_ROTATED', 4), ('OBJECT_MOVE', 5), ('SENSITIVITY', 6)],
 		[('RESET', 10), ('UNDO', 13), ('REDO', 14)]
 ]
@@ -27,6 +27,7 @@ BUTTON_HEIGHTS = []
 for column in TOOL_LIST:
 	BUTTON_HEIGHTS.append(HEIGHT / len(column))
 
+# prime doe
 sensitivity = 101
 selected_tool = "VIEW_ROTATE"
 led_index = 2
@@ -153,7 +154,6 @@ def object_rotate(contact, numContacts):
 	delta_y /= tmp_sensitivity
 	for blender_object in bpy.context.selected_objects:
 		blender_object.transform.rotation_euler = (delta_y, delta_x, 0)
-
 
 def view_rotate(contact, numContacts):
 	for view in bpy.context.screen.areas:
