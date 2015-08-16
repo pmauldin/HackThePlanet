@@ -27,14 +27,14 @@ def process_inputs(contacts):
 
 	for contact in contacts:
 		if contact.x_pos_mm < TOOL_THRESHOLD:
-			selected_tool = select_tool(contact.x_pos_mm, contact.y_pos_mm)
+			selected_tool = select_tool(contact)
 			print("Selecting %s at %s, %s" % (selected_tool, contact.x_pos_mm, contact.y_pos_mm))
 			break
+		else:
+			print("Touching myself")
 
 
-def select_tool(xpos, ypos):
-	x = math.floor(xpos / BUTTON_WIDTH)
-	print (x)
-	y = math.floor(ypos / BUTTON_HEIGHT)
-	print (y)
+def select_tool(contact):
+	x = math.floor(contact.x_pos_mm / BUTTON_WIDTH)
+	y = math.floor(contact.y_pos_mm / BUTTON_HEIGHT)
 	return TOOL_LIST[x][y]
