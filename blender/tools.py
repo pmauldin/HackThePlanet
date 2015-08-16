@@ -16,7 +16,7 @@ HEIGHT = 120
 TOOL_THRESHOLD = 65
 
 BUTTON_WIDTH = TOOL_THRESHOLD / 2
-BUTTON_HEIGHT = HEIGHT / len(TOOL_LIST[0])
+BUTTON_HEIGHT = HEIGHT / len(TOOL_LIST[1])
 
 
 sensitivity = 100
@@ -34,7 +34,6 @@ def process_inputs(contacts):
 
 	for contact in contacts:
 		if contact.x_pos_mm < TOOL_THRESHOLD:
-			selected_tool = select_tool(contact)
 			tool = select_tool(contact)
 			if tool is 'RESET':
 				reset()
@@ -45,8 +44,11 @@ def process_inputs(contacts):
 		else:
 			if selected_tool is 'OBJECT_MOVE':
 				print ("Prev coords: [%d, %d]  -  Current coords [%d, %d]" % (prev_coords[0], prev_coords[1], contact.x_pos_mm, contact.y_pos_mm))
-				prev_coords = [contact.x_pos_mm, contact.y_pos_mm]
-
+				if prev_coords is [0.0, 0.0]:
+					prev_coords = [contact.x_pos_mm, contact.y_pos_mm]
+				else:
+					prev_coords = [contact.x_pos_mm, contact.y_pos_mm]
+					object_move(contact)
 
 def select_tool(contact):
 	x = math.floor(contact.x_pos_mm / BUTTON_WIDTH)
