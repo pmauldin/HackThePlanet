@@ -19,7 +19,7 @@ BUTTON_WIDTH = TOOL_THRESHOLD / 2
 BUTTON_HEIGHT = HEIGHT / len(TOOL_LIST[0])
 
 
-sensitivity = 80000
+sensitivity = 100
 selected_tool = "OBJECT_MOVE"
 
 prev_coords = [0.0, 0.0]
@@ -57,3 +57,13 @@ def reset():
 	for blender_object in bpy.context.selected_objects:
 		blender_object.rotation_euler = (0, 0, 0)
 		blender_object.location = (0, 0, 0)
+
+def object_move(contact):
+	global prev_coords
+	delta_x = contact.x_pos_mm - prev_coords[0]
+	delta_y = contact.y_pos_mm - prev_coords[1]
+	for blender_object in bpy.context.selected_objects:
+		loc = blender_object.location
+		loc.x += delta_y
+		loc.y += delta_x
+		blender_object.location = loc
