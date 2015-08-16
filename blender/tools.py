@@ -5,12 +5,12 @@ from mathutils import Euler
 SENSEL_DEVICE = None
 
 TOOL_LIST = [
-		[('VIEW_MOVE', 0), ('VIEW_PAN', 1), ('VIEW_ROTATE', 2), ('VIEW_CURSOR', 3)],
-		[('OBJECT_INDENT', 4), ('OBJECT_ROTATED', 5), ('OBJECT_MOVE', 6), ('SENSITIVITY', 7), ('RESET', 8)],
-		[('UNDO', 13), ('REDO', 14)]
+		[('VIEW_MOVE', 0), ('VIEW_ROTATE', 1), ('VIEW_CURSOR', 2)],
+		[('OBJECT_INDENT', 3), ('OBJECT_ROTATED', 4), ('OBJECT_MOVE', 5), ('SENSITIVITY', 6)],
+		[('RESET', 10), ('UNDO', 13), ('REDO', 14)]
 ]
 
-NUM_BUTTONS = 11
+NUM_BUTTONS = 16
 LED_BRIGHTNESS = 150
 LED_LIST = []
 for i in range(NUM_BUTTONS):
@@ -19,7 +19,7 @@ for i in range(NUM_BUTTONS):
 WIDTH = 230
 HEIGHT = 120
 
-TOOL_THRESHOLD = 65
+TOOL_THRESHOLD = 90
 FORCE_THRESHOLD = 3000
 
 BUTTON_WIDTH = TOOL_THRESHOLD / len(TOOL_LIST)
@@ -46,13 +46,14 @@ def process_inputs(contacts):
 		tool,led_index = select_tool(contacts[0])
 		if tool == 'RESET':
 			reset()
-			prev_coords = [contacts[0].x_pos_mm, contacts[0].y_pos_mm]
 		elif tool == 'UNDO' or tool == 'REDO':
 			history(tool)
 		elif selected_tool != tool:
 			selected_tool = tool
 			updateLED()
 			print("Selecting %s at %s, %s" % (selected_tool, contacts[0].x_pos_mm, contacts[0].y_pos_mm))
+		prev_coords = [contacts[0].x_pos_mm, contacts[0].y_pos_mm]
+		return
 	else:
 		for contact in contacts:
 			if contact.id is 0:
@@ -64,6 +65,8 @@ def process_inputs(contacts):
 						object_move(contact, len(contacts))
 					elif selected_tool == 'VIEW_ROTATE':
 						view_rotate(contact, len(contacts))
+					elif selected_tool == 'VIEW_PAN':
+						view_pan(contact, len(contacts))
 					prev_coords = [contact.x_pos_mm, contact.y_pos_mm]
 					return
 
@@ -88,22 +91,22 @@ def updateLED():
 	SENSEL_DEVICE.setLEDBrightness(LED_LIST)
 
 def flashLED(tool):
-	flash_index = -1
-	if tool == 'RESET':
-		flash_index = 8
-	elif tool == 'UNDO':
-		flash_index = 13
-	elif tool == 'REDO':
-		flash_index = 14
-	if flash_index > -1:
-		LED_LIST[flash_index] = 254
-		SENSEL_DEVICE.setLEDBrightness(LED_LIST)
-		LED_LIST[flash_index] = 0
-		SENSEL_DEVICE.setLEDBrightness(LED_LIST)
+	if prev_coords == [0.0, 0.0]:
+		flash_index = -1
+		if tool == 'RESET':
+			flash_index = 10
+		elif tool == 'UNDO':
+			flash_index = 13
+		elif tool == 'REDO':
+			flash_index = 14
+		if flash_index > -1:
+			LED_LIST[flash_index] = LED_BRIGHTNESS
+			SENSEL_DEVICE.setLEDBrightness(LED_LIST)
+			LED_LIST[flash_index] = 0
+			SENSEL_DEVICE.setLEDBrightness(LED_LIST)
 
 def reset():
-	if prev_coords == [0.0, 0.0]:
-		flashLED('RESET')
+	flashLED('RESET')
 
 	for area in bpy.context.screen.areas:
 		if area.type == 'VIEW_3D':
@@ -149,6 +152,20 @@ def view_rotate(contact, numContacts):
 			delta_x /= tmp_sensitivity
 			delta_y /= tmp_sensitivity
 			view.spaces[0].region_3d.view_rotation.rotate(Euler((0, delta_y, delta_x)))
+			view_zoom(view, contact, numContacts)
+
+def view_pan(contact, numContacts):
+	for view in bpy.context.screen.areas:
+		if view.type == 'VIEW_3D':
+			tmp_sensitivity = sensitivity - ((numContacts - 1) * 35)
+			if tmp_sensitivity < 20:
+				tmp_sensitivity = 20
+			delta_x, delta_y = calc_delta(contact)
+			delta_x /= tmp_sensitivity
+			delta_y /= tmp_sensitivity
+			view.spaces[0].region_3d.view_location = (view.spaces[0].region_3d.view_location.x + delta_y,
+													  view.spaces[0].region_3d.view_location.y + delta_x,
+													  view.spaces[0].region_3d.view_location.z)
 			view_zoom(view, contact, numContacts)
 
 def view_zoom(view, contact, numContacts):
