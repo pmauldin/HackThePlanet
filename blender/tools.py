@@ -6,7 +6,7 @@ SENSEL_DEVICE = None
 
 TOOL_LIST = [
 		[('VIEW_PAN', 0), ('VIEW_ROTATE', 1), ('VIEW_CURSOR', 2)],
-		[('OBJECT_INDENT', 3), ('OBJECT_ROTATE', 4), ('OBJECT_MOVE', 5), ('SENSITIVITY', 6)],
+		[('OBJECT_INDENT', 3), ('OBJECT_ROTATE', 4), ('OBJECT_MOVE', 5)],
 		[('RESET', 10), ('UNDO', 13), ('REDO', 14)]
 ]
 
@@ -30,8 +30,8 @@ for column in TOOL_LIST:
 
 # prime doe
 sensitivity = 101
-selected_tool = "VIEW_ROTATE"
-led_index = 2
+selected_tool = "VIEW_PAN"
+led_index = 0
 
 prev_coords = [0.0, 0.0]
 
@@ -90,9 +90,6 @@ def select_tool(contact):
 def updateLED():
 	global led_index
 
-	if led_index == 8:
-		return
-
 	for i in range(NUM_BUTTONS):
 		LED_LIST[i] = 0
 	LED_LIST[led_index] = LED_BRIGHTNESS
@@ -116,6 +113,7 @@ def flashLED(tool):
 def reset():
 	flashLED('RESET')
 
+	bpy.context.scene.cursor_location = (0, 0, 0)
 	for area in bpy.context.screen.areas:
 		if area.type == 'VIEW_3D':
 			area.spaces[0].region_3d.view_rotation = (0.8, 0.46, 0.2, 0.34)
@@ -137,13 +135,7 @@ def history(tool_name):
 
 
 def object_move(contact, numContacts):
-	tmp_sensitivity = sensitivity - ((numContacts - 1) * 35)
-	if tmp_sensitivity < 20:
-		tmp_sensitivity = 20
-	delta_x, delta_y = calc_delta(contact)
-	delta_x /= tmp_sensitivity
-	delta_y /= tmp_sensitivity
-
+	delta_x, delta_y = calc_delta(contact, numContacts)
 	delta_z = calc_force(contact, numContacts)
 
 	for blender_object in bpy.context.selected_objects:
@@ -152,36 +144,21 @@ def object_move(contact, numContacts):
 		                           blender_object.location.z + delta_z)
 
 def object_rotate(contact, numContacts):
-	tmp_sensitivity = sensitivity - ((numContacts - 1) * 35)
-	if tmp_sensitivity < 20:
-		tmp_sensitivity = 20
-	delta_x, delta_y = calc_delta(contact)
-	delta_x /= tmp_sensitivity
-	delta_y /= tmp_sensitivity
+	delta_x, delta_y = calc_delta(contact, numContacts)
 	for blender_object in bpy.context.selected_objects:
 		blender_object.transform.rotation_euler = (delta_y, delta_x, 0)
 
 def view_rotate(contact, numContacts):
 	for view in bpy.context.screen.areas:
 		if view.type == 'VIEW_3D':
-			tmp_sensitivity = sensitivity - ((numContacts - 1) * 35)
-			if tmp_sensitivity < 20:
-				tmp_sensitivity = 20
-			delta_x, delta_y = calc_delta(contact)
-			delta_x /= tmp_sensitivity
-			delta_y /= tmp_sensitivity
+			delta_x, delta_y = calc_delta(contact, numContacts)
 			view.spaces[0].region_3d.view_rotation.rotate(Euler((0, delta_y, delta_x)))
 			view_zoom(view, contact, numContacts)
 
 def view_pan(contact, numContacts):
 	for view in bpy.context.screen.areas:
 		if view.type == 'VIEW_3D':
-			tmp_sensitivity = sensitivity - ((numContacts - 1) * 35)
-			if tmp_sensitivity < 20:
-				tmp_sensitivity = 20
-			delta_x, delta_y = calc_delta(contact)
-			delta_x /= tmp_sensitivity
-			delta_y /= tmp_sensitivity
+			delta_x, delta_y = calc_delta(contact, numContacts)
 			view.spaces[0].region_3d.view_location = (view.spaces[0].region_3d.view_location.x + delta_y,
 													  view.spaces[0].region_3d.view_location.y + delta_x,
 													  view.spaces[0].region_3d.view_location.z)
@@ -192,22 +169,18 @@ def view_zoom(view, contact, numContacts):
 	view.spaces[0].region_3d.view_distance += delta_z
 
 def view_cursor(contact, numContacts):
-	tmp_sensitivity = sensitivity - ((numContacts - 1) * 45)
-	if tmp_sensitivity < 20:
-		tmp_sensitivity = 20
-	delta_x, delta_y = calc_delta(contact)
-	delta_x /= tmp_sensitivity
-	delta_y /= tmp_sensitivity
-
+	delta_x, delta_y = calc_delta(contact, numContacts)
 	delta_z = calc_force(contact, numContacts)
-
 	bpy.context.scene.cursor_location = (bpy.context.scene.cursor_location.x + delta_z,
 										 bpy.context.scene.cursor_location.y + delta_x,
 										 bpy.context.scene.cursor_location.z - delta_y)
 
-def calc_delta(contact):
-	delta_x = (contact.x_pos_mm - prev_coords[0])
-	delta_y = (contact.y_pos_mm - prev_coords[1])
+def calc_delta(contact, numContacts):
+	tmp_sensitivity = sensitivity - ((numContacts - 1) * 35)
+	if tmp_sensitivity < 20:
+		tmp_sensitivity = 20
+	delta_x = (contact.x_pos_mm - prev_coords[0]) / tmp_sensitivity
+	delta_y = (contact.y_pos_mm - prev_coords[1]) / tmp_sensitivity
 	return delta_x, delta_y
 
 def calc_force(contact, numContacts):
@@ -215,8 +188,8 @@ def calc_force(contact, numContacts):
 	if numContacts > 1:
 		direction = 1
 
-	delta_z = 0
+	force = 0
 	if contact.total_force > FORCE_THRESHOLD:
-		delta_z = contact.total_force / FORCE_SENSITIVITY * direction
+		force = contact.total_force / FORCE_SENSITIVITY * direction
 
-	return delta_z
+	return force
