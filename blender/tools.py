@@ -1,5 +1,6 @@
 import bpy
 import math
+from mathutils import Euler
 
 SENSEL_DEVICE = None
 
@@ -25,8 +26,8 @@ for column in TOOL_LIST:
 	BUTTON_HEIGHTS.append(HEIGHT / len(column))
 
 sensitivity = 101
-selected_tool = "OBJECT_MOVE"
-led_index = 6
+selected_tool = "VIEW_ROTATE"
+led_index = 2
 
 prev_coords = [0.0, 0.0]
 
@@ -51,15 +52,15 @@ def process_inputs(contacts):
 	else:
 		for contact in contacts:
 			if contact.id is 0:
-				if selected_tool == 'OBJECT_MOVE':
-					if prev_coords[0] is 0.0:
-						prev_coords = [contact.x_pos_mm, contact.y_pos_mm]
-					else:
-						object_move(contact, len(contacts))
-						prev_coords = [contact.x_pos_mm, contact.y_pos_mm]
+				if prev_coords[0] is 0.0:
+					prev_coords = [contact.x_pos_mm, contact.y_pos_mm]
 					return
-				elif selected_tool == 'VIEW_ROTATED':
-					view_rotate(contact)
+				else:
+					if selected_tool == 'OBJECT_MOVE':
+						object_move(contact, len(contacts))
+					elif selected_tool == 'VIEW_ROTATE':
+						view_rotate(contact, len(contacts))
+					prev_coords = [contact.x_pos_mm, contact.y_pos_mm]
 
 def set_device(device):
 	global SENSEL_DEVICE
@@ -98,14 +99,26 @@ def object_move(contact, numContacts):
 	tmp_sensitivity = sensitivity - ((numContacts - 1) * 35)
 	if tmp_sensitivity < 20:
 		tmp_sensitivity = 20
-	delta_x = (contact.x_pos_mm - prev_coords[0]) / tmp_sensitivity
-	delta_y = (contact.y_pos_mm - prev_coords[1]) / tmp_sensitivity
+	delta_x, delta_y = calc_delta(contact)
+	delta_x /= tmp_sensitivity
+	delta_y /= tmp_sensitivity
 	for blender_object in bpy.context.selected_objects:
 		blender_object.location = (blender_object.location.x + delta_y,
 		                           blender_object.location.y + delta_x,
 		                           blender_object.location.z)
 
-def view_rotate(contact):
-	for view in bpy.context.areas:
+def view_rotate(contact, numContacts):
+	for view in bpy.context.screen.areas:
 		if view.type == 'VIEW_3D':
-			view.spaces[0].region_3d.view_rotation.rotate(Euler((0.1, 0.1, 0.1)))
+			tmp_sensitivity = sensitivity - ((numContacts - 1) * 35)
+			if tmp_sensitivity < 20:
+				tmp_sensitivity = 20
+			delta_x, delta_y = calc_delta(contact)
+			delta_x /= tmp_sensitivity
+			delta_y /= tmp_sensitivity
+			view.spaces[0].region_3d.view_rotation.rotate(Euler((0, delta_y, delta_x)))
+
+def calc_delta(contact):
+	delta_x = (contact.x_pos_mm - prev_coords[0])
+	delta_y = (contact.y_pos_mm - prev_coords[1])
+	return delta_x, delta_y
