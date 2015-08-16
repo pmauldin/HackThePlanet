@@ -1,13 +1,9 @@
 import bpy
 import math
 import sys
-import paramiko
 from mathutils import Euler
 
-# sys.path.append("/home/peter/Hackathons/venv/lib/python3.4/site-packages/")
-sys.path.append("/home/lakitu/bin/blender-2.75a-linux-glibc211-x86_64/2.7.5/python/lib/python3.4/site-packages/")
-sys.path.append("/home/lakitu/.local/lib/python2.7/site-packages/")
-# sys.path.append("/home/bin/blender-2.75a-linux-glibc211-x86_64/2.7.5/python/lib/python3.4/site-packages/")
+sys.path.append("/home/peter/Hackathons/venv/lib/python3.4/site-packages/")
 from pymouse import PyMouse
 
 SENSEL_DEVICE = None
@@ -126,11 +122,10 @@ def reset():
 	flashLED('RESET')
 
 	bpy.context.scene.cursor_location = (0, 0, 0)
-	for area in bpy.context.screen.areas:
-		if area.type == 'VIEW_3D':
-			area.spaces[0].region_3d.view_rotation = (0.8, 0.46, 0.2, 0.34)
-			area.spaces[0].region_3d.view_location = (0, 0, 0)
-			area.spaces[0].region_3d.view_distance = 9
+	view = get_view()
+	view.spaces[0].region_3d.view_rotation = (0.8, 0.46, 0.2, 0.34)
+	view.spaces[0].region_3d.view_location = (0, 0, 0)
+	view.spaces[0].region_3d.view_distance = 9
 
 	for blender_object in bpy.context.selected_objects:
 		blender_object.rotation_euler = (0, 0, 0)
@@ -155,25 +150,22 @@ def object_rotate(contact, numContacts):
 	delta_x, delta_y = calc_delta(contact, numContacts)
 	bpy.ops.transform.rotate(value=delta_y, axis=(1,1,0))
 	bpy.ops.transform.rotate(value=delta_x, axis=(0,0,1))
-	for view in bpy.context.screen.areas:
-		if view.type == 'VIEW_3D':
-			view_zoom(view, contact, numContacts)
+	view = get_view()
+	view_zoom(view, contact, numContacts)
 
 def view_rotate(contact, numContacts):
-	for view in bpy.context.screen.areas:
-		if view.type == 'VIEW_3D':
-			delta_x, delta_y = calc_delta(contact, numContacts)
-			view.spaces[0].region_3d.view_rotation.rotate(Euler((0, delta_y, delta_x)))
-			view_zoom(view, contact, numContacts)
+	view = get_view()
+	delta_x, delta_y = calc_delta(contact, numContacts)
+	view.spaces[0].region_3d.view_rotation.rotate(Euler((0, delta_y, delta_x)))
+	view_zoom(view, contact, numContacts)
 
 def view_pan(contact, numContacts):
-	for view in bpy.context.screen.areas:
-		if view.type == 'VIEW_3D':
-			delta_x, delta_y = calc_delta(contact, numContacts)
-			view.spaces[0].region_3d.view_location = (view.spaces[0].region_3d.view_location.x + delta_y,
-													  view.spaces[0].region_3d.view_location.y + delta_x,
-													  view.spaces[0].region_3d.view_location.z)
-			view_zoom(view, contact, numContacts)
+	view = get_view()
+	delta_x, delta_y = calc_delta(contact, numContacts)
+	view.spaces[0].region_3d.view_location = (view.spaces[0].region_3d.view_location.x + delta_y,
+											  view.spaces[0].region_3d.view_location.y + delta_x,
+											  view.spaces[0].region_3d.view_location.z)
+	view_zoom(view, contact, numContacts)
 
 def view_zoom(view, contact, numContacts):
 	delta_z = calc_force(contact, numContacts)
@@ -184,16 +176,16 @@ def view_cursor(contact, numContacts):
 
 	w, h = mouse.screen_size()
 
-	area = bpy.context.screen.areas[2]
+	view = get_view()
 
 	width_percent = (contact.x_pos_mm - TOOL_THRESHOLD) / TOUCH_WIDTH
 	height_percent = contact.y_pos_mm / HEIGHT
 
-	viewport_x = bpy.context.window.x + area.x
-	viewport_y = h - (area.height + area.y)
+	viewport_x = bpy.context.window.x + view.x
+	viewport_y = h - (view.height + view.y)
 
-	input_x = width_percent * area.width
-	input_y = height_percent * area.height
+	input_x = width_percent * view.width
+	input_y = height_percent * view.height
 
 	mouse.click(int(viewport_x + input_x), int(viewport_y + input_y), 1)
 
@@ -226,8 +218,7 @@ def calc_force(contact, numContacts, threshold=FORCE_THRESHOLD):
 
 	return force
 
-def click():
-	mouse_pos = mouse.position()
-	mouse.click()
-
-	mouse.move(mouse_pos.x, mouse_pos.yr)
+def get_view():
+	for view in bpy.context.screen.areas:
+		if view.type == 'VIEW_3D':
+			return view
