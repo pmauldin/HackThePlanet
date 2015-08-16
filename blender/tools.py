@@ -67,6 +67,8 @@ def process_inputs(contacts):
 						view_rotate(contact, len(contacts))
 					elif selected_tool == 'VIEW_PAN':
 						view_pan(contact, len(contacts))
+					elif selected_tool == 'OBJECT_INDENT':
+						object_indent(contact, len(contacts))
 					prev_coords = [contact.x_pos_mm, contact.y_pos_mm]
 					return
 
