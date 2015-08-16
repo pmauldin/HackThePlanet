@@ -5,10 +5,11 @@ SENSEL_DEVICE = None
 
 TOOL_LIST = [
 		[('VIEW_MOVE', 0), ('VIEW_PAN', 1), ('VIEW_ROTATE', 2), ('VIEW_CURSOR', 3)],
-		[('OBJECT_INDENT', 4), ('OBJECT_ROTATED', 5), ('OBJECT_MOVE', 6), ('SENSITIVITY', 7), ('RESET', 8)]
+		[('OBJECT_INDENT', 4), ('OBJECT_ROTATED', 5), ('OBJECT_MOVE', 6), ('SENSITIVITY', 7), ('RESET', 8)],
+		[('UNDO', 9), ('REDO', 10)]
 ]
 
-NUM_BUTTONS = 9
+NUM_BUTTONS = 11
 LED_BRIGHTNESS = 150
 LED_LIST = []
 for i in range(NUM_BUTTONS):
@@ -41,6 +42,7 @@ def process_inputs(contacts):
 
 	if contacts[0].x_pos_mm < TOOL_THRESHOLD:
 		tool,led_index = select_tool(contacts[0])
+		history(tool)
 		if tool == 'RESET':
 			reset()
 			prev_coords = [contacts[0].x_pos_mm, contacts[0].y_pos_mm]
@@ -90,9 +92,21 @@ def resetAlertLED():
 def reset():
 	if prev_coords == [0.0, 0.0]:
 		resetAlertLED()
+	#TODO: for loop
+	bpy.context.screen.areas[2].spaces[0].region_3d.view_rotation = (0.8, 0.46, 0.2, 0.34)
+	bpy.context.screen.areas[2].spaces[0].region_3d.view_location = (0, 0, 0, 0)
+	bpy.context.screen.areas[2].spaces[0].region_3d.view_distance = 9
 	for blender_object in bpy.context.selected_objects:
 		blender_object.rotation_euler = (0, 0, 0)
 		blender_object.location = (0, 0, 0)
+
+def history(tool_name):
+	if tool_name == 'UNDO':
+		bpy.ops.ed.undo()
+	elif tool_name == 'REDO':
+		bpy.ops.ed.redo()
+
+
 
 def object_move(contact, numContacts):
 	tmp_sensitivity = sensitivity - ((numContacts - 1) * 35)
