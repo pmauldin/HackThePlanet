@@ -31,4 +31,4 @@ def process_inputs(contacts):
 
 
 def select_tool(contact):
-	return TOOL_LIST[contact.x_pos_mm / BUTTON_WIDTH][contact.y_pos_mm / BUTTON_HEIGHT]
+	return TOOL_LIST[contact.x_pos_mm // BUTTON_WIDTH][contact.y_pos_mm // BUTTON_HEIGHT]
