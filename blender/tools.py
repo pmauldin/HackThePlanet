@@ -180,19 +180,21 @@ def view_zoom(view, contact, numContacts):
 def view_cursor(contact, numContacts):
 	mouse_x, mouse_y = mouse.position()
 	delta_x, delta_y = calc_delta(contact, numContacts, 0.5, .25, 0.08)
+	new_mouse_x = mouse_x + int(delta_x)
+	new_mouse_y = mouse_y + int(delta_y)
 
-	mouse.move(math.floor(mouse_x + delta_x), math.floor(mouse_y + delta_y))
+	mouse.move(new_mouse_x, new_mouse_y)
 
-	delta_z = calc_force(contact, numContacts, 6000)
+	delta_z = calc_force(contact, numContacts, 3000)
 
 	if delta_z != 0:
 		if delta_z < 0:
-			mouse.click(mouse_x, mouse_y, 1)
+			mouse.click(new_mouse_x, new_mouse_y, 1)
 		else:
-			mouse.click(mouse_x, mouse_y, 2)
+			mouse.click(new_mouse_x, new_mouse_y, 2)
 
-def calc_delta(contact, numContacts, s=sensitivity, base_sensitivity=35.0, min_sensitivity=20.0):
-	tmp_sensitivity = s - ((numContacts - 1) * base_sensitivity)
+def calc_delta(contact, numContacts, s=sensitivity, delta=35.0, min_sensitivity=20.0):
+	tmp_sensitivity = s - ((numContacts - 1) * delta)
 	if tmp_sensitivity < min_sensitivity:
 		tmp_sensitivity = min_sensitivity
 	delta_x = (contact.x_pos_mm - prev_coords[0]) / tmp_sensitivity
