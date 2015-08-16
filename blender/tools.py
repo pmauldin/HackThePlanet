@@ -10,8 +10,8 @@ SENSEL_DEVICE = None
 
 TOOL_LIST = [
 		[('VIEW_PAN', 0), ('VIEW_ROTATE', 1), ('VIEW_CURSOR', 2)],
-		[('OBJECT_INDENT', 3), ('OBJECT_ROTATE', 4), ('OBJECT_MOVE', 5)],
-		[('RESET', 10), ('UNDO', 13), ('REDO', 14)]
+		[('OBJECT_MOVE', 3), ('OBJECT_ROTATE', 4), ('OBJECT_INDENT', 5)],
+		[('RESET', 13), ('UNDO', 14), ('REDO', 15)]
 ]
 
 NUM_BUTTONS = 16
@@ -33,7 +33,7 @@ for column in TOOL_LIST:
 	BUTTON_HEIGHTS.append(HEIGHT / len(column))
 
 # prime doe
-sensitivity = 101
+sensitivity = 101.0
 selected_tool = "VIEW_PAN"
 led_index = 0
 
@@ -107,11 +107,11 @@ def flashLED(tool):
 	print(tool)
 	flash_index = -1
 	if tool == 'RESET':
-		flash_index = 10
-	elif tool == 'UNDO':
 		flash_index = 13
-	elif tool == 'REDO':
+	elif tool == 'UNDO':
 		flash_index = 14
+	elif tool == 'REDO':
+		flash_index = 15
 	if flash_index > -1:
 		LED_LIST[flash_index] = LED_BRIGHTNESS
 		SENSEL_DEVICE.setLEDBrightness(LED_LIST)
@@ -172,35 +172,24 @@ def view_zoom(view, contact, numContacts):
 	view.spaces[0].region_3d.view_distance += delta_z
 
 def view_cursor(contact, numContacts):
-	TOUCH_WIDTH = WIDTH - TOOL_THRESHOLD
+	mouse_x, mouse_y = mouse.position()
+	delta_x, delta_y = calc_delta(contact, numContacts, 0.5, .25, 0.08)
 
-	w, h = mouse.screen_size()
+	mouse.move(math.floor(mouse_x + delta_x), math.floor(mouse_y + delta_y))
 
-	view = get_view()
-
-	width_percent = (contact.x_pos_mm - TOOL_THRESHOLD) / TOUCH_WIDTH
-	height_percent = contact.y_pos_mm / HEIGHT
-
-	viewport_x = bpy.context.window.x + view.x
-	viewport_y = h - (view.height + view.y)
-
-	input_x = width_percent * view.width
-	input_y = height_percent * view.height
-
-	mouse.click(int(viewport_x + input_x), int(viewport_y + input_y), 1)
-
-
-	delta_z = calc_force(contact, numContacts, 4500)
+	delta_z = calc_force(contact, numContacts, 6000)
 
 	if delta_z != 0:
-		xx, yy = mouse.position()
-		mouse.click(xx, yy, 2)
+		if delta_z < 0:
+			mouse.click(mouse_x, mouse_y, 1)
+		else:
+			mouse.click(mouse_x, mouse_y, 2)
 
 def sculpt_toggle():
 	bpy.ops.object.mode_set(MODE='EDIT')
 
-def calc_delta(contact, numContacts, base_sensitivity=35, min_sensitivity=20):
-	tmp_sensitivity = sensitivity - ((numContacts - 1) * base_sensitivity)
+def calc_delta(contact, numContacts, s=sensitivity, base_sensitivity=35.0, min_sensitivity=20.0):
+	tmp_sensitivity = s - ((numContacts - 1) * base_sensitivity)
 	if tmp_sensitivity < min_sensitivity:
 		tmp_sensitivity = min_sensitivity
 	delta_x = (contact.x_pos_mm - prev_coords[0]) / tmp_sensitivity
