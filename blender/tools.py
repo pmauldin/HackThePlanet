@@ -78,7 +78,13 @@ def updateLED():
 	LED_LIST[led_index] = LED_BRIGHTNESS
 	SENSEL_DEVICE.setLEDBrightness(LED_LIST)
 
+def resetAlertLED():
+	LED_LIST[8] = 254
+	SENSEL_DEVICE.setLEDBrightness(LED_LIST)
+	LED_LIST[8] = 0
+	SENSEL_DEVICE.setLEDBrightness(LED_LIST)
 def reset():
+	resetAlertLED()
 	for blender_object in bpy.context.selected_objects:
 		blender_object.rotation_euler = (0, 0, 0)
 		blender_object.location = (0, 0, 0)
