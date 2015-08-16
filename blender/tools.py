@@ -63,7 +63,6 @@ def object_move(contact):
 	delta_x = contact.x_pos_mm - prev_coords[0]
 	delta_y = contact.y_pos_mm - prev_coords[1]
 	for blender_object in bpy.context.selected_objects:
-		loc = blender_object.location
-		loc.x += delta_y
-		loc.y += delta_x
-		blender_object.location = loc
+		blender_object.location = (blender_object.location.x + delta_y,
+		                           blender_object.location.y + delta_x,
+		                           blender_object.location.z)
