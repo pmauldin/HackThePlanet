@@ -20,6 +20,7 @@ WIDTH = 230
 HEIGHT = 120
 
 TOOL_THRESHOLD = 65
+FORCE_THRESHOLD = 3000
 
 BUTTON_WIDTH = TOOL_THRESHOLD / len(TOOL_LIST)
 BUTTON_HEIGHTS = []
@@ -64,6 +65,7 @@ def process_inputs(contacts):
 					elif selected_tool == 'VIEW_ROTATE':
 						view_rotate(contact, len(contacts))
 					prev_coords = [contact.x_pos_mm, contact.y_pos_mm]
+					return
 
 def set_device(device):
 	global SENSEL_DEVICE
@@ -100,23 +102,15 @@ def flashLED(tool):
 		SENSEL_DEVICE.setLEDBrightness(LED_LIST)
 
 def reset():
-	print("Reset")
 	if prev_coords == [0.0, 0.0]:
-<<<<<<< HEAD
-		flashLED()
-	#TODO: for loop
-	bpy.context.screen.areas[2].spaces[0].region_3d.view_rotation = (0.8, 0.46, 0.2, 0.34)
-	bpy.context.screen.areas[2].spaces[0].region_3d.view_location = (0, 0, 0, 0)
-	bpy.context.screen.areas[2].spaces[0].region_3d.view_distance = 9
-=======
-		resetAlertLED()
+		flashLED('RESET')
+
 	for area in bpy.context.screen.areas:
 		if area.type == 'VIEW_3D':
 			area.spaces[0].region_3d.view_rotation = (0.8, 0.46, 0.2, 0.34)
 			area.spaces[0].region_3d.view_location = (0, 0, 0)
 			area.spaces[0].region_3d.view_distance = 9
-	
->>>>>>> refs/remotes/origin/master
+
 	for blender_object in bpy.context.selected_objects:
 		blender_object.rotation_euler = (0, 0, 0)
 		blender_object.location = (0, 0, 0)
@@ -155,6 +149,15 @@ def view_rotate(contact, numContacts):
 			delta_x /= tmp_sensitivity
 			delta_y /= tmp_sensitivity
 			view.spaces[0].region_3d.view_rotation.rotate(Euler((0, delta_y, delta_x)))
+			view_zoom(view, contact, numContacts)
+
+def view_zoom(view, contact, numContacts):
+	direction = -1
+	if numContacts > 1:
+		direction = 1
+	print(contact.total_force)
+	if contact.total_force > FORCE_THRESHOLD:
+		view.spaces[0].region_3d.view_distance += contact.total_force / 20000 * direction
 
 def calc_delta(contact):
 	delta_x = (contact.x_pos_mm - prev_coords[0])
