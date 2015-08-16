@@ -6,7 +6,7 @@ SENSEL_DEVICE = None
 
 TOOL_LIST = [
 		[('VIEW_PAN', 0), ('VIEW_ROTATE', 1), ('VIEW_CURSOR', 2)],
-		[('OBJECT_INDENT', 3), ('OBJECT_ROTATED', 4), ('OBJECT_MOVE', 5), ('SENSITIVITY', 6)],
+		[('OBJECT_INDENT', 3), ('OBJECT_ROTATE', 4), ('OBJECT_MOVE', 5), ('SENSITIVITY', 6)],
 		[('RESET', 10), ('UNDO', 13), ('REDO', 14)]
 ]
 
@@ -21,6 +21,7 @@ HEIGHT = 120
 
 TOOL_THRESHOLD = 90
 FORCE_THRESHOLD = 3000
+FORCE_SENSITIVITY = 20000
 
 BUTTON_WIDTH = TOOL_THRESHOLD / len(TOOL_LIST)
 BUTTON_HEIGHTS = []
@@ -44,11 +45,13 @@ def process_inputs(contacts):
 		return
 
 	if contacts[0].x_pos_mm < TOOL_THRESHOLD:
-		tool,led_index = select_tool(contacts[0])
+		tool, led_index = select_tool(contacts[0])
 		if tool == 'RESET':
-			reset()
+			if prev_coords == [0.0, 0.0]:
+				reset()
 		elif tool == 'UNDO' or tool == 'REDO':
-			history(tool)
+			if prev_coords == [0.0, 0.0]:
+				history(tool)
 		elif selected_tool != tool:
 			selected_tool = tool
 			updateLED()
@@ -70,6 +73,8 @@ def process_inputs(contacts):
 						view_pan(contact, len(contacts))
 					elif selected_tool == 'VIEW_ROTATE':
 						view_rotate(contact, len(contacts))
+					elif selected_tool == 'VIEW_CURSOR':
+						view_cursor(contact, len(contacts))
 					prev_coords = [contact.x_pos_mm, contact.y_pos_mm]
 					return
 
@@ -94,19 +99,19 @@ def updateLED():
 	SENSEL_DEVICE.setLEDBrightness(LED_LIST)
 
 def flashLED(tool):
-	if prev_coords == [0.0, 0.0]:
-		flash_index = -1
-		if tool == 'RESET':
-			flash_index = 10
-		elif tool == 'UNDO':
-			flash_index = 13
-		elif tool == 'REDO':
-			flash_index = 14
-		if flash_index > -1:
-			LED_LIST[flash_index] = LED_BRIGHTNESS
-			SENSEL_DEVICE.setLEDBrightness(LED_LIST)
-			LED_LIST[flash_index] = 0
-			SENSEL_DEVICE.setLEDBrightness(LED_LIST)
+	print(tool)
+	flash_index = -1
+	if tool == 'RESET':
+		flash_index = 10
+	elif tool == 'UNDO':
+		flash_index = 13
+	elif tool == 'REDO':
+		flash_index = 14
+	if flash_index > -1:
+		LED_LIST[flash_index] = LED_BRIGHTNESS
+		SENSEL_DEVICE.setLEDBrightness(LED_LIST)
+		LED_LIST[flash_index] = 0
+		SENSEL_DEVICE.setLEDBrightness(LED_LIST)
 
 def reset():
 	flashLED('RESET')
@@ -123,11 +128,9 @@ def reset():
 
 def history(tool_name):
 	if tool_name == 'UNDO':
-		print("Undo")
 		bpy.ops.ed.undo()
 		flashLED(tool_name)
 	elif tool_name == 'REDO':
-		print("Redo")
 		bpy.ops.ed.redo()
 		flashLED(tool_name)
 
@@ -140,10 +143,13 @@ def object_move(contact, numContacts):
 	delta_x, delta_y = calc_delta(contact)
 	delta_x /= tmp_sensitivity
 	delta_y /= tmp_sensitivity
+
+	delta_z = calc_force(contact, numContacts)
+
 	for blender_object in bpy.context.selected_objects:
 		blender_object.location = (blender_object.location.x + delta_y,
 		                           blender_object.location.y + delta_x,
-		                           blender_object.location.z)
+		                           blender_object.location.z + delta_z)
 
 def object_rotate(contact, numContacts):
 	tmp_sensitivity = sensitivity - ((numContacts - 1) * 35)
@@ -182,14 +188,35 @@ def view_pan(contact, numContacts):
 			view_zoom(view, contact, numContacts)
 
 def view_zoom(view, contact, numContacts):
-	direction = -1
-	if numContacts > 1:
-		direction = 1
-	print(contact.total_force)
-	if contact.total_force > FORCE_THRESHOLD:
-		view.spaces[0].region_3d.view_distance += contact.total_force / 20000 * direction
+	delta_z = calc_force(contact, numContacts)
+	view.spaces[0].region_3d.view_distance += delta_z
+
+def view_cursor(contact, numContacts):
+	tmp_sensitivity = sensitivity - ((numContacts - 1) * 45)
+	if tmp_sensitivity < 20:
+		tmp_sensitivity = 20
+	delta_x, delta_y = calc_delta(contact)
+	delta_x /= tmp_sensitivity
+	delta_y /= tmp_sensitivity
+
+	delta_z = calc_force(contact, numContacts)
+
+	bpy.context.scene.cursor_location = (bpy.context.scene.cursor_location.x + delta_z,
+										 bpy.context.scene.cursor_location.y + delta_x,
+										 bpy.context.scene.cursor_location.z - delta_y)
 
 def calc_delta(contact):
 	delta_x = (contact.x_pos_mm - prev_coords[0])
 	delta_y = (contact.y_pos_mm - prev_coords[1])
 	return delta_x, delta_y
+
+def calc_force(contact, numContacts):
+	direction = -1
+	if numContacts > 1:
+		direction = 1
+
+	delta_z = 0
+	if contact.total_force > FORCE_THRESHOLD:
+		delta_z = contact.total_force / FORCE_SENSITIVITY * direction
+
+	return delta_z
