@@ -7,7 +7,7 @@ SENSEL_DEVICE = None
 TOOL_LIST = [
 		[('VIEW_MOVE', 0), ('VIEW_PAN', 1), ('VIEW_ROTATE', 2), ('VIEW_CURSOR', 3)],
 		[('OBJECT_INDENT', 4), ('OBJECT_ROTATED', 5), ('OBJECT_MOVE', 6), ('SENSITIVITY', 7), ('RESET', 8)],
-		[('UNDO', 9), ('REDO', 10)]
+		[('UNDO', 13), ('REDO', 14)]
 ]
 
 NUM_BUTTONS = 11
@@ -84,15 +84,23 @@ def updateLED():
 	LED_LIST[led_index] = LED_BRIGHTNESS
 	SENSEL_DEVICE.setLEDBrightness(LED_LIST)
 
-def resetAlertLED():
-	LED_LIST[8] = 254
-	SENSEL_DEVICE.setLEDBrightness(LED_LIST)
-	LED_LIST[8] = 0
-	SENSEL_DEVICE.setLEDBrightness(LED_LIST)
+def flashLED(tool):
+	flash_index = -1
+	if tool == 'RESET':
+		flash_index = 8
+	elif tool == 'UNDO':
+		flash_index = 13
+	elif tool == 'REDO':
+		flash_index = 14
+	if flash_index > -1:
+		LED_LIST[flash_index] = 254
+		SENSEL_DEVICE.setLEDBrightness(LED_LIST)
+		LED_LIST[flash_index] = 0
+		SENSEL_DEVICE.setLEDBrightness(LED_LIST)
 
 def reset():
 	if prev_coords == [0.0, 0.0]:
-		resetAlertLED()
+		flashLED()
 	#TODO: for loop
 	bpy.context.screen.areas[2].spaces[0].region_3d.view_rotation = (0.8, 0.46, 0.2, 0.34)
 	bpy.context.screen.areas[2].spaces[0].region_3d.view_location = (0, 0, 0, 0)
@@ -104,8 +112,10 @@ def reset():
 def history(tool_name):
 	if tool_name == 'UNDO':
 		bpy.ops.ed.undo()
+		flashLED(tool_name)
 	elif tool_name == 'REDO':
 		bpy.ops.ed.redo()
+		flashLED(tool_name)
 
 
 
