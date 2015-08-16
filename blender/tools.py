@@ -58,6 +58,8 @@ def process_inputs(contacts):
 						object_move(contact, len(contacts))
 						prev_coords = [contact.x_pos_mm, contact.y_pos_mm]
 					return
+				elif selected_tool == 'VIEW_ROTATED':
+					view_rotate(contact)
 
 def set_device(device):
 	global SENSEL_DEVICE
@@ -102,3 +104,8 @@ def object_move(contact, numContacts):
 		blender_object.location = (blender_object.location.x + delta_y,
 		                           blender_object.location.y + delta_x,
 		                           blender_object.location.z)
+
+def view_rotate(contact):
+	for view in bpy.context.areas:
+		if view.type == 'VIEW_3D':
+			view.spaces[0].region_3d.view_rotation.rotate(Euler((0.1, 0.1, 0.1)))
