@@ -148,7 +148,7 @@ def object_move(contact, numContacts):
 def object_rotate(contact, numContacts):
 	delta_x, delta_y = calc_delta(contact, numContacts)
 	for blender_object in bpy.context.selected_objects:
-		blender_object.rotation_euler = (delta_y, delta_x, 0)
+		blender_object.trackball = (delta_y, delta_x)
 
 def view_rotate(contact, numContacts):
 	for view in bpy.context.screen.areas:
@@ -178,7 +178,8 @@ def view_cursor(contact, numContacts):
 										 bpy.context.scene.cursor_location.z - delta_y)
 
 def sculpt_toggle():
-	bpy.ops.sculpt.sculptmode_toggle()
+	bpy.ops.object.mode_set(MODE='EDIT')
+	bpy.context.selected_objects[0].bend()
 
 def calc_delta(contact, numContacts):
 	tmp_sensitivity = sensitivity - ((numContacts - 1) * 35)
