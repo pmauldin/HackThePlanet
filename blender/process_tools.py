@@ -1,6 +1,7 @@
 import bpy
 import math
 import sys
+import tool
 from mathutils import Euler
 
 sys.path.append("/home/peter/Hackathons/venv/lib/python3.4/site-packages/")
@@ -13,6 +14,9 @@ TOOL_LIST = [
 		[('OBJECT_MOVE', 3), ('OBJECT_ROTATE', 4), ('TOGGLE_MODE', 5)],
 		[('RESET', 13), ('UNDO', 14), ('REDO', 15)]
 ]
+
+bob = tool.Tool("TOGGLE_EDIT", 254)
+bob.select()
 
 NUM_BUTTONS = 16
 LED_BRIGHTNESS = 150
@@ -216,3 +220,10 @@ def get_view():
 	for view in bpy.context.screen.areas:
 		if view.type == 'VIEW_3D':
 			return view
+
+
+def initialize_tools(tool_names):
+	results = []
+	for tool in tool_names:
+		results.append(tool.Tool(tool, 0))
+	return results

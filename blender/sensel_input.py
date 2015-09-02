@@ -4,7 +4,7 @@ bl_info = {
 }
 import bpy
 import sensel
-import tools
+import process_tools
 
 class SenselOperator(bpy.types.Operator):
 	"""Operator which runs its self from a timer"""
@@ -27,7 +27,7 @@ class SenselOperator(bpy.types.Operator):
 
 		if event.type == 'TIMER':
 			contacts = self.sensel_device.readContacts()
-			tools.process_inputs(contacts)
+			process_tools.process_inputs(contacts)
 
 		return {'PASS_THROUGH'}
 
@@ -35,7 +35,7 @@ class SenselOperator(bpy.types.Operator):
 		wm = context.window_manager
 		self._timer = wm.event_timer_add(0.001, context.window)
 		wm.modal_handler_add(self)
-		tools.set_device(self.sensel_device)
+		process_tools.set_device(self.sensel_device)
 		return {'RUNNING_MODAL'}
 
 	def cancel(self, context):
