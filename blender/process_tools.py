@@ -15,14 +15,19 @@ TOOL_LIST = [
 	[('RESET', 13), ('UNDO', 14), ('REDO', 15)]
 ]
 
-NAME_LIST = [
-	'VIEW_PAN', 'VIEW_ROTATE', 'VIEW_CURSOR', 'OBJECT_MOVE', 'OBJECT_ROTATE',
-	'TOGGLE_MODE', 'RESET', 'UNDO', 'REDO'
+# temporary solution for prototyping purposes.
+# A list containing tuples in the form (name, LED_index)
+TOOLS_LIST = [
+	('VIEW_PAN', 0), ('VIEW_ROTATE', 1), ('VIEW_CURSOR', 2),
+	('OBJECT_MOVE', 3), ('OBJECT_ROTATE', 4), ('TOGGLE_MODE', 5),
+	('RESET', 13), ('UNDO', 14), ('REDO', 15)
 ]
 
+ROWS = 3
+COLUMNS = 3
 
 
-bob = Tool("TOGGLE_EDIT", 254)
+
 
 NUM_BUTTONS = 16
 LED_BRIGHTNESS = 150
@@ -247,8 +252,8 @@ def get_view():
 
 
 # Josh: Proof of concept. Initialize a non-2D list of Tool objects
-def populate_tools(tool_names):
+def populate_tools(tool_list):
 	results = []
-	for tool in tool_names:
-		results.append(tool.Tool(tool, 0))
+	for tool in tool_list:
+		results.append(Tool(tool[0], 0, tool[1]))
 	return results

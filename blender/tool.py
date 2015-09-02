@@ -17,7 +17,8 @@ class Tool:
 
 	def __str__(self):
 		return 'Name: ' + self.name + \
-		       '\nBrightness: ' + str(self.brightness)
+		       '\nBrightness: ' + str(self.brightness) + \
+				'\nIndex: ' + str(self.LED_index)
 
 	def toggle_selected(self):
 		self.selected = not self.selected
