@@ -1,7 +1,7 @@
 import bpy
 import math
 import sys
-import tool
+from tool import Tool
 from mathutils import Euler
 
 sys.path.append("/home/peter/Hackathons/venv/lib/python3.4/site-packages/")
@@ -10,13 +10,19 @@ from pymouse import PyMouse
 SENSEL_DEVICE = None
 
 TOOL_LIST = [
-		[('VIEW_PAN', 0), ('VIEW_ROTATE', 1), ('VIEW_CURSOR', 2)],
-		[('OBJECT_MOVE', 3), ('OBJECT_ROTATE', 4), ('TOGGLE_MODE', 5)],
-		[('RESET', 13), ('UNDO', 14), ('REDO', 15)]
+	[('VIEW_PAN', 0), ('VIEW_ROTATE', 1), ('VIEW_CURSOR', 2)],
+	[('OBJECT_MOVE', 3), ('OBJECT_ROTATE', 4), ('TOGGLE_MODE', 5)],
+	[('RESET', 13), ('UNDO', 14), ('REDO', 15)]
 ]
 
-bob = tool.Tool("TOGGLE_EDIT", 254)
-bob.select()
+NAME_LIST = [
+	'VIEW_PAN', 'VIEW_ROTATE', 'VIEW_CURSOR', 'OBJECT_MOVE', 'OBJECT_ROTATE',
+	'TOGGLE_MODE', 'RESET', 'UNDO', 'REDO'
+]
+
+
+
+bob = Tool("TOGGLE_EDIT", 254)
 
 NUM_BUTTONS = 16
 LED_BRIGHTNESS = 150
@@ -45,6 +51,7 @@ prev_coords = [0.0, 0.0]
 edit = False
 
 mouse = PyMouse()
+
 
 def process_inputs(contacts):
 	global selected_tool
@@ -91,14 +98,17 @@ def process_inputs(contacts):
 					prev_coords = [contact.x_pos_mm, contact.y_pos_mm]
 					return
 
+
 def set_device(device):
 	global SENSEL_DEVICE
 	SENSEL_DEVICE = device
+
 
 def select_tool(contact):
 	x = math.floor(contact.x_pos_mm / BUTTON_WIDTH)
 	y = math.floor(contact.y_pos_mm / BUTTON_HEIGHTS[x])
 	return TOOL_LIST[x][y]
+
 
 def updateLED():
 	global led_index
@@ -107,6 +117,7 @@ def updateLED():
 		LED_LIST[i] = 0
 	LED_LIST[led_index] = LED_BRIGHTNESS
 	SENSEL_DEVICE.setLEDBrightness(LED_LIST)
+
 
 def flashLED(tool):
 	flash_index = -1
@@ -122,6 +133,7 @@ def flashLED(tool):
 		LED_LIST[flash_index] = 0
 		SENSEL_DEVICE.setLEDBrightness(LED_LIST)
 
+
 def reset():
 	flashLED('RESET')
 
@@ -135,6 +147,7 @@ def reset():
 		blender_object.rotation_euler = (0, 0, 0)
 		blender_object.location = (0, 0, 0)
 
+
 def history(tool_name):
 	if tool_name == 'UNDO':
 		bpy.ops.ed.undo()
@@ -143,17 +156,20 @@ def history(tool_name):
 		bpy.ops.ed.redo()
 		flashLED(tool_name)
 
-def object_move(contact, numContacts):
-	delta_x, delta_y = calc_delta(contact, numContacts)
-	delta_z = calc_force(contact, numContacts)
+
+def object_move(contact, num_contacts):
+	delta_x, delta_y = calc_delta(contact, num_contacts)
+	delta_z = calc_force(contact, num_contacts)
 	bpy.ops.transform.translate(value=(delta_y, delta_x, delta_z))
 
-def object_rotate(contact, numContacts):
-	delta_x, delta_y = calc_delta(contact, numContacts)
-	bpy.ops.transform.rotate(value=delta_y, axis=(1,1,0))
-	bpy.ops.transform.rotate(value=delta_x, axis=(0,0,1))
+
+def object_rotate(contact, num_contacts):
+	delta_x, delta_y = calc_delta(contact, num_contacts)
+	bpy.ops.transform.rotate(value=delta_y, axis=(1, 1, 0))
+	bpy.ops.transform.rotate(value=delta_x, axis=(0, 0, 1))
 	view = get_view()
-	view_zoom(view, contact, numContacts)
+	view_zoom(view, contact, num_contacts)
+
 
 def toggle_mode():
 	global edit
@@ -163,33 +179,38 @@ def toggle_mode():
 	else:
 		bpy.ops.object.mode_set(mode='OBJECT')
 
-def view_rotate(contact, numContacts):
+
+def view_rotate(contact, num_contacts):
 	view = get_view()
-	delta_x, delta_y = calc_delta(contact, numContacts)
+	delta_x, delta_y = calc_delta(contact, num_contacts)
 	view.spaces[0].region_3d.view_rotation.rotate(Euler((0, delta_y, delta_x)))
-	view_zoom(view, contact, numContacts)
+	view_zoom(view, contact, num_contacts)
 
-def view_pan(contact, numContacts):
+
+def view_pan(contact, num_contacts):
 	view = get_view()
-	delta_x, delta_y = calc_delta(contact, numContacts)
-	view.spaces[0].region_3d.view_location = (view.spaces[0].region_3d.view_location.x + delta_y,
-											  view.spaces[0].region_3d.view_location.y + delta_x,
-											  view.spaces[0].region_3d.view_location.z)
-	view_zoom(view, contact, numContacts)
+	delta_x, delta_y = calc_delta(contact, num_contacts)
+	view.spaces[0].region_3d.view_location = (
+		view.spaces[0].region_3d.view_location.x + delta_y,
+		view.spaces[0].region_3d.view_location.y + delta_x,
+		view.spaces[0].region_3d.view_location.z)
+	view_zoom(view, contact, num_contacts)
 
-def view_zoom(view, contact, numContacts):
-	delta_z = calc_force(contact, numContacts)
+
+def view_zoom(view, contact, num_contacts):
+	delta_z = calc_force(contact, num_contacts)
 	view.spaces[0].region_3d.view_distance += delta_z
 
-def view_cursor(contact, numContacts):
+
+def view_cursor(contact, num_contacts):
 	mouse_x, mouse_y = mouse.position()
-	delta_x, delta_y = calc_delta(contact, numContacts, 0.5, .25, 0.08)
+	delta_x, delta_y = calc_delta(contact, num_contacts, 0.5, .25, 0.08)
 	new_mouse_x = mouse_x + int(delta_x)
 	new_mouse_y = mouse_y + int(delta_y)
 
 	mouse.move(new_mouse_x, new_mouse_y)
 
-	delta_z = calc_force(contact, numContacts, 3000)
+	delta_z = calc_force(contact, num_contacts, 3000)
 
 	if delta_z != 0:
 		if delta_z < 0:
@@ -197,17 +218,19 @@ def view_cursor(contact, numContacts):
 		else:
 			mouse.click(new_mouse_x, new_mouse_y, 2)
 
-def calc_delta(contact, numContacts, s=sensitivity, delta=35.0, min_sensitivity=20.0):
-	tmp_sensitivity = s - ((numContacts - 1) * delta)
+
+def calc_delta(contact, num_contacts, s=sensitivity, delta=35.0, min_sensitivity=20.0):
+	tmp_sensitivity = s - ((num_contacts - 1) * delta)
 	if tmp_sensitivity < min_sensitivity:
 		tmp_sensitivity = min_sensitivity
 	delta_x = (contact.x_pos_mm - prev_coords[0]) / tmp_sensitivity
 	delta_y = (contact.y_pos_mm - prev_coords[1]) / tmp_sensitivity
 	return delta_x, delta_y
 
-def calc_force(contact, numContacts, threshold=FORCE_THRESHOLD):
+
+def calc_force(contact, num_contacts, threshold=FORCE_THRESHOLD):
 	direction = -1
-	if numContacts > 1:
+	if num_contacts > 1:
 		direction = 1
 
 	force = 0
@@ -216,13 +239,15 @@ def calc_force(contact, numContacts, threshold=FORCE_THRESHOLD):
 
 	return force
 
+
 def get_view():
 	for view in bpy.context.screen.areas:
 		if view.type == 'VIEW_3D':
 			return view
 
 
-def initialize_tools(tool_names):
+# Josh: Proof of concept. Initialize a non-2D list of Tool objects
+def populate_tools(tool_names):
 	results = []
 	for tool in tool_names:
 		results.append(tool.Tool(tool, 0))
